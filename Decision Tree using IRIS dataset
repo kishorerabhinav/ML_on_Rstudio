@@ -1,0 +1,40 @@
+# Decision Tree using IRIS dataset 29-Aug_2020
+#### Exploratory Data Analysis ####
+data(iris)
+summary(iris)
+library(ggplot2)
+library(e1071)
+
+scatter <- ggplot(data=iris, aes(x = Petal.Length, y = Petal.Width))
+scatter + geom_point(aes(color=Species, shape=Species)) +
+  xlab("Petal Length") +  ylab("Petal Width") +
+  ggtitle("Petal Length-Width")
+
+#### Dividing Dataset into Training and Validation ####
+library(rpart)
+library(caret)
+train.flag <- createDataPartition(y=iris$Species,p=0.5,list=FALSE)
+training <- iris[train.flag,]
+Validation <- iris[-train.flag,]
+
+#### Model fitting using training data ####
+modfit <- train(Species~.,method="rpart",data=training) 
+
+#### Visualize Model Output using rattle ####
+library(rattle)
+fancyRpartPlot(modfit$finalModel)
+
+#### Confusion Matrix on training and Validation data ####
+train.cart<-predict(modfit,newdata=training)
+table(train.cart,training$Species)
+pred.cart<-predict(modfit,newdata=Validation)
+table(pred.cart,Validation$Species)
+
+#### Visualize the prediction and identify incorrect predictions ####
+correct <- pred.cart == Validation$Species
+scatter2 <- ggplot(data=Validation, aes(x = Petal.Length, y = Petal.Width)) 
+scatter2 + geom_point(aes(color=correct)) +
+  xlab("Petal Length") +  ylab("Petal Width") +  
+  ggtitle("Classification Accuracy")  
+
+

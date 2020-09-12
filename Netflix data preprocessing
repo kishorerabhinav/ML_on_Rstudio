@@ -1,0 +1,66 @@
+# Data Preprocessing for Netflix data (Movies and TV Shows listings on Netflix)
+# Data Source: https://www.kaggle.com/shivamb/netflix-shows
+
+netflix=read.csv(file = "C:/Users/kishore.ra/Downloads/netflix_titles.csv", na.strings = c("NA", ""), stringsAsFactors=F)
+head(netflix)
+View(netflix)
+
+#### 6234 observations of 12 following variables describing the tv shows and movies ####
+#### show_id - Unique ID for every Movie / Tv Show ####
+#### type - Identifier - A Movie or TV Show ####
+#### title - Title of the Movie / Tv Show ####
+#### director - Director of the Movie ####
+#### cast - Actors involved in the movie / show ####
+#### country - Country where the movie / show was produced ####
+#### date_added - Date it was added on Netflix ####
+#### release_year - Actual Release year of the move / show ####
+#### rating - TV Rating of the movie / show ####
+#### duration - Total Duration - in minutes or number of seasons ####
+#### listed_in - Genere ####
+#### description - The summary description ####
+
+#drop show_id column
+netflix = subset(netflix, select = -c(show_id) )
+View(netflix)
+
+#print number of missing values for each variable
+data.frame("variable"=c(colnames(netflix)), "missing values count"=sapply(netflix, function(x) sum(is.na(x))), row.names=NULL)
+
+#### From the above output we see that we have missing values for variables director, cast, country, data_added and rating. ####
+#### Since rating is the categorical variable with 14 levels we can fill in (approximate) the missing values for rating with a mode ####
+#function to find a mode
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+netflix$rating[is.na(netflix$rating)] <- getmode(netflix$rating)
+View(netflix)
+
+#### We can change the date format of the data_added varible for easier manipulations further.####
+####  as. Date( ) function to convert character data to dates ####
+netflix$date_added <- as.Date(netflix$date_added, format = "%B %d, %Y")
+#### %b = abbreviated month, example = Jan, %B = unabbreviated month, example = January ####
+
+#### The missing values for the variables director, cast and country, date_added can not be easily approximated ####
+##### so for now we are going to continue without filling them. ####
+##### We are going to drop the missing values, at point where it will be necessary ####
+#### We also drop duplicated rows in the dataset based on the title, country, type, release_year variables. ####
+#drop duplicated rows based on the title, country, type and release_year
+library(dplyr)
+netflix=distinct(netflix,title,country,type,release_year, .keep_all= TRUE)
+View(netflix)
+str(netflix)
+
+#### rename "listed_in" to "genere" for clarity ####
+library(tidyverse)
+colnames(netflix)
+netflix <- netflix %>%
+  rename(genere = listed_in)
+colnames(netflix)
+#### Data cleaning is done. ####
+#### let's write this thing as a new .csv file ####
+write.csv(netflix,"D:/4th trim/Machine Learning/Abhinav's Repository/ML_on_Rstudio\\Cleaned Netflix Data.csv", row.names = FALSE)
+#### Visualise this new .csv on tableau now ####
+
+# Source: https://datatofish.com/export-dataframe-to-csv-in-r/
+          
